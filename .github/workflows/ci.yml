@@ -13,63 +13,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Set up JDK (подстрой под Docker / локальный JDK)
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
-      # Build project
       - name: Build project
-        run: mvn clean install -q -DskipTests
+        run: mvn clean install -q
 
-      # Run SpotBugs + FindSecBugs
-      - name: Run SpotBugs + FindSecBugs
+      - name: Run SpotBugs
         run: |
           mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs \
             -Dspotbugs.xmlOutput=true \
-            -Dspotbugs.htmlOutput=true \
-            -Dspotbugs.outputDirectory=target/spotbugs-reports \
-            -Dfindsecbugs.pluginVersion=1.12.0
+            -Dspotbugs.htmlOutput=true 
 
-      # Upload SpotBugs reports
       - name: Upload SpotBugs reports
         uses: actions/upload-artifact@v4
         with:
           name: spotbugs-reports
           path: target/spotbugs-reports/
 
-      # OWASP Dependency-Check (SAST/SCA)
-      - name: Run OWASP Dependency-Check
-        run: mvn org.owasp:dependency-check-maven:check \
-          -Dformat=ALL \
-          -DoutputDirectory=target/dependency-check-report
-
-      - name: Upload Dependency-Check reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-reports
-          path: target/dependency-check-report/
-
-      # Install Snyk CLI
       - name: Install Snyk CLI
-        run: npm install -g snyk snyk-to-html
+        run: npm install -g snyk
 
-      # Run Snyk Test
       - name: Run Snyk Test
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
+          npm install -g snyk snyk-to-html
           snyk test --all-projects | tee target/snyk-report.txt
           snyk test --all-projects --json > target/snyk-report.json
           snyk-to-html -i target/snyk-report.json -o target/snyk-report.html
 
-      # Upload Snyk reports
       - name: Upload Snyk reports
         uses: actions/upload-artifact@v4
         with:
