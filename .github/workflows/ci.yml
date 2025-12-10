@@ -42,19 +42,19 @@ jobs:
 
       - name: Run SpotBugs
         run: |
-          mkdir -p target/spotbugs-reports
           mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs \
             -DspotbugsXmlOutput=true \
             -DspotbugsOutputDirectory=target/spotbugs-reports \
-            -DspotbugsHtmlOutput=true
+            -DspotbugsHtmlOutput=true \
+            -DspotbugsHtmlOutputFile=target/spotbugs-reports/spotbugs.html
+
 
       - name: Upload SpotBugs reports
         uses: actions/upload-artifact@v4
         with:
           name: spotbugs-reports
-          path: |
-            target/spotbugs.html
-            target/spotbugsXml.xml
+          path: target/spotbugs-reports/
+
 
 
       - name: Install Snyk CLI
